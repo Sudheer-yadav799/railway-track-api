@@ -49,7 +49,8 @@ exports.login = async (req, res) => {
 
     res.json({
       message: "Login successful",
-      token: `Bearer ${token}`,
+      token: `${token}`,
+      userId:user.id,
       expiresAt: new Date(decoded.exp * 1000)
     });
 
