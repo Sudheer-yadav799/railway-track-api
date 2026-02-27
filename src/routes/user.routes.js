@@ -1,9 +1,12 @@
 const router = require("express").Router();
-const controller = require("../controllers/user.controller");
+const userController = require("../controllers/user.controller");
 const { verifyToken } = require("../middlewares/auth.middleware");
 
-router.post("/createuser", controller.createUser);
-router.get("/getallusers", verifyToken, controller.getAllUsers);
-router.get("/get-id-by-userdetails/:id", verifyToken, controller.getUserById);
+router.post("/createuser", userController.createUser);
+router.get("/getallusers", verifyToken, userController.getAllUsers);
+router.get("/get-id-by-userdetails/:id", verifyToken, userController.getUserById);
+
+router.delete("/delete-by-id/:id/:deletedById", verifyToken, userController.deleteUser);
+router.post("/restore/:id/:restoredById",  verifyToken,userController.restoreUser); 
 
 module.exports = router;

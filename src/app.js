@@ -9,6 +9,7 @@ const sequelize = require('./config/database');
 
 const userRoutes = require("./routes/user.routes");
 const authRoutes = require("./routes/auth.routes");
+const layerRoutes = require("./routes/layer.routes");
 
 const app = express();
 
@@ -21,6 +22,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerFile));
 
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/layers", layerRoutes);
+
 
 sequelize.sync()
   .then(() => console.log("Database synced"))

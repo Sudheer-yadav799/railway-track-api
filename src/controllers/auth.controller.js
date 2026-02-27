@@ -3,10 +3,15 @@ const jwt = require("jsonwebtoken");
 const { Op } = require("sequelize");
 const { User, Role, UserSession } = require("../models");
 
-
 exports.login = async (req, res) => {
   try {
     const { user_id, password } = req.body;
+
+    if (!user_id || !password) {
+      return res.status(400).json({
+        message: "User ID and password are required"
+      });
+    }
 
     const user = await User.findOne({
       where: {
@@ -21,13 +26,23 @@ exports.login = async (req, res) => {
     if (!user)
       return res.status(404).json({ message: "User not found" });
 
+    if (!user.is_active) {
+      return res.status(403).json({
+        message: "User account is inactive"
+      });
+    }
+    if (user.password !== password) {
+      return res.status(400).json({
+        message: "Wrong password"
+      });
+    }
 
     const roles = user.Roles.map(r => r.name);
 
     const payload = {
       id: user.id,
-      name :user.name,
-      mobile_number :user.mobile_number,
+      name: user.name,
+      mobile_number: user.mobile_number,
       roles
     };
 
@@ -39,18 +54,17 @@ exports.login = async (req, res) => {
       { expiresIn }
     );
 
-    // 🔥 Save login session
     await UserSession.create({
       user_id: user.id,
-      token: token
+      token
     });
 
     const decoded = jwt.decode(token);
 
     res.json({
       message: "Login successful",
-      token: `${token}`,
-      userId:user.id,
+      token,
+      userId: user.id,
       expiresAt: new Date(decoded.exp * 1000)
     });
 
