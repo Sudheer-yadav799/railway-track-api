@@ -7,33 +7,49 @@ const User = sequelize.define("User", {
     primaryKey: true,
     autoIncrement: true
   },
+
   name: {
     type: DataTypes.STRING,
     allowNull: false
   },
+
   email: {
     type: DataTypes.STRING,
     unique: true,
     allowNull: false
   },
+
   mobile_number: {
     type: DataTypes.STRING,
     unique: true,
     allowNull: false
   },
+
   password: {
     type: DataTypes.TEXT,
     allowNull: false
   },
+
   is_active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
+  },
+  created_by: {
+    type: DataTypes.INTEGER,
+    allowNull: true   
+  },
+
+  deleted_by: {
+    type: DataTypes.INTEGER,
+    allowNull: true   
   }
+
 }, {
-  tableName: "users",        // IMPORTANT
+  tableName: "users",
   freezeTableName: true,
-  underscored: true, 
-  timestamps: true
+  underscored: true,
+  timestamps: true,
+  paranoid: true
 });
 
 module.exports = User;
