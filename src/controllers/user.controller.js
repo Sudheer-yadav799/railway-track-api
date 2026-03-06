@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const { User, Role } = require("../models");
+const { User, Role, UserProject } = require("../models");
 
 exports.createUser = async (req, res) => {
   try {
@@ -73,20 +73,59 @@ exports.getAllUsers = async (req, res) => {
 
 exports.getUserById = async (req, res) => {
   try {
-    const user = await User.findByPk(req.params.id, {
-      attributes: { exclude: ["password"] },
-      include: Role
+
+    const { id } = req.params;
+
+    const user = await User.findByPk(id, {
+      attributes: [
+        "id",
+        "name",
+        "email",
+        "mobile_number",
+        "is_active",
+        "created_by",
+        "deleted_by"
+      ],
+      include: [
+        {
+          model: Role,
+          attributes: ["id", "name", "description"],
+          through: { attributes: [] } 
+        }
+      ]
     });
 
-    if (!user)
-      return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
 
-    res.json(user);
+    // Get assigned projects
+    const userProjects = await UserProject.findAll({
+      where: {
+        user_id: id,
+        is_active: true
+      },
+      attributes: ["project_id"]
+    });
+
+    const projectIds = userProjects.map(p => p.project_id);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        ...user.toJSON(),
+        projectIds: projectIds
+      }
+    });
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message
+    });
   }
 };
-
 exports.deleteUser = async (req, res) => {
   try {
     const { id, deletedById } = req.params;
