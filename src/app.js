@@ -10,7 +10,8 @@ const sequelize = require('./config/database');
 const userRoutes = require("./routes/user.routes");
 const authRoutes = require("./routes/auth.routes");
 const layerRoutes = require("./routes/layer.routes");
-
+const projectRoutes = require("./routes/project.routes"); 
+const assignProjectRoutes = require("./routes/userproject.routes"); 
 const app = express();
 
 app.use(cors());
@@ -23,8 +24,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerFile));
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/layers", layerRoutes);
+app.use("/api/assignproject",assignProjectRoutes)
 
-
+app.use("/api/layers",   layerRoutes);
+app.use("/api/projects", projectRoutes,);
 sequelize.sync()
   .then(() => console.log("Database synced"))
   .catch(err => console.error(err));
