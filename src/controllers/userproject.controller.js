@@ -177,3 +177,119 @@ exports.getProjectUsers = async (req, res) => {
     });
   }
 };
+
+
+exports.getUsersWithProjects = async (req, res) => {
+  try {
+
+    const users = await User.findAll({
+      attributes: ["id", "name", "email"],
+      include: [
+        {
+          model: Project,
+          as: "projects",
+          attributes: ["id", "name", "code"],
+          through: {
+            attributes: [],
+            where: { is_active: true }
+          }
+        },
+        {
+          model: Role,
+          attributes: ["id", "name"]
+        }
+      ],
+      order: [["name", "ASC"]]
+    });
+
+    const result = users.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.Roles?.[0]?.name || null,
+      projects: user.projects.map(p => ({
+        id: p.id,
+        name: p.name,
+        code: p.code
+      }))
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: "Users with assigned projects fetched successfully",
+      data: result
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: "Error fetching users with projects",
+      error: error.message
+    });
+
+  }
+};
+
+
+exports.getUserAssignedProjects = async (req, res) => {
+  try {
+
+    const { user_id } = req.params;
+
+    const user = await User.findOne({
+      where: { id: user_id },
+      attributes: [],
+      include: [
+        {
+          model: Project,
+          as: "projects",
+          attributes: [
+            "id",
+            "name",
+            "code",
+            "map_view_center",
+            "geoserver_workspace",
+            "station_count",
+            "track_length_km"
+          ],
+          through: {
+            attributes: [],
+            where: { is_active: true }
+          }
+        }
+      ],
+      order: [[{ model: Project, as: "projects" }, "id", "ASC"]] // ORDER BY projects.id ASC
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    const projects = user.projects.map(p => ({
+      id: p.id,
+      name: p.name,
+      code: p.code,
+      map_view: p.map_view_center,
+      workspace: p.geoserver_workspace,
+      station_count: p.station_count,
+      track_length_km: p.track_length_km,
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: "User assigned projects fetched successfully",
+      data: projects
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching user projects",
+      error: error.message
+    });
+  }
+};

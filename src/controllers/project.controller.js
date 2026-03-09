@@ -6,7 +6,7 @@ exports.getAllProjects = async (req, res) => {
   try {
     const projects = await Project.findAll({
       where: { is_active: true },
-      attributes: ["id", "name", "code", "from_station", "to_station", "geoserver_workspace", "track_length_km","station_count"],
+      attributes: ["id", "name", "code", "from_station", "to_station", "geoserver_workspace", "track_length_km","station_count","map_view_center"],
       order: [["id", "ASC"]]
     });
 
@@ -141,6 +141,108 @@ exports.toggleProjectLayer = async (req, res) => {
     if (!updated) return res.status(404).json({ success: false, message: "Project layer not found." });
 
     res.status(200).json({ success: true, message: "Layer updated successfully." });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+
+exports.getProjectDetails = async (req, res) => {
+  try {
+
+    const { projectId } = req.params;
+
+    const project = await Project.findOne({
+      where: {
+        id: projectId,
+        deleted_at: null
+      },
+      attributes: [
+        "id",
+        "name",
+        "geoserver_workspace",
+        "map_view_center",
+        "track_length_km",
+      ]
+    });
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Project details retrieved successfully",
+      data: project
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.deleteProject = async (req, res) => {
+  try {
+
+    const { projectId } = req.params;
+
+    const project = await Project.findByPk(projectId);
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found"
+      });
+    }
+
+    await project.update({
+      deleted_at: new Date(),
+      deleted_by: req.user.id,
+      is_active: false
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Project deleted successfully"
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.createProject = async (req, res) => {
+  try {
+
+    const {
+      name,
+      code,
+      from_station,
+      to_station,
+      geoserver_workspace,
+      map_view_center
+    } = req.body;
+
+    const project = await Project.create({
+      name,
+      code,
+      from_station,
+      to_station,
+      geoserver_workspace,
+      map_view_center,
+      created_by: req.user.id
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Project created successfully",
+      data: project
+    });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
