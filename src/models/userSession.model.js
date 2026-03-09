@@ -22,6 +22,9 @@ const UserSession = sequelize.define("UserSession", {
   logout_time: {
     type: DataTypes.DATE
   },
+  session_expiry_time: {
+    type: DataTypes.DATE
+  },
   is_active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
@@ -32,5 +35,4 @@ const UserSession = sequelize.define("UserSession", {
   underscored: true,
   timestamps: false
 });
-
 module.exports = UserSession;

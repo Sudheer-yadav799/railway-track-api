@@ -127,6 +127,14 @@ User.hasMany(UserProject, {
    EXPORT MODELS
 ====================== */
 
+UserSession.belongsTo(User, {
+  foreignKey: "user_id"
+});
+
+User.hasMany(UserSession, {
+  foreignKey: "user_id"
+});
+
 module.exports = {
   sequelize,
   User,

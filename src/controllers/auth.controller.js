@@ -156,3 +156,49 @@ exports.register = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+exports.getTodayUserSessions = async (req, res) => {
+  try {
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const sessions = await UserSession.findAll({
+      where: {
+        login_time: {
+          [Op.between]: [startOfDay, endOfDay]
+        }
+      },
+      include: [
+        {
+          model: User,
+          attributes: ["id", "name", "email", "mobile_number"]
+        }
+      ],
+      order: [["login_time", "DESC"]]
+    });
+
+    const formatted = sessions.map((s) => ({
+      user_id: s.user_id,
+      name: s.User?.name,
+      email: s.User?.email,
+      mobile_number: s.User?.mobile_number,
+      login_time: s.login_time,
+      logout_time: s.logout_time,
+      status: s.is_active ? "active" : "logged_out"
+    }));
+
+    res.json({
+      success: true,
+      total_users_today: formatted.length,
+      users: formatted
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

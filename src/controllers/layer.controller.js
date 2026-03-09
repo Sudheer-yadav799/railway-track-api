@@ -55,7 +55,7 @@ exports.getAllLayers = async (req, res) => {
           ]
         }
       ],
-      order: [["section", "ASC"]]
+      order: [["id", "DESC"]]
     });
 
     const formattedData = sections.map(section => ({
