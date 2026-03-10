@@ -247,3 +247,60 @@ exports.createProject = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+// ---------- PATCH /api/projects/:projectId  → edit project ----------
+exports.updateProject = async (req, res) => {
+  try {
+
+    const { projectId } = req.params;
+
+    const {
+      name,
+      code,
+      from_station,
+      to_station,
+      geoserver_workspace,
+      map_view_center,
+      track_length_km,
+      station_count
+    } = req.body;
+
+    // check project exists
+    const project = await Project.findOne({
+      where: {
+        id: projectId,
+        deleted_at: null
+      }
+    });
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found"
+      });
+    }
+
+    // update fields
+    await project.update({
+      name: name ?? project.name,
+      code: code ?? project.code,
+      from_station: from_station ?? project.from_station,
+      to_station: to_station ?? project.to_station,
+      geoserver_workspace: geoserver_workspace ?? project.geoserver_workspace,
+      map_view_center: map_view_center ?? project.map_view_center,
+      track_length_km: track_length_km ?? project.track_length_km,
+      station_count: station_count ?? project.station_count,
+      updated_by: req.user.id
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Project updated successfully",
+      data: project
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

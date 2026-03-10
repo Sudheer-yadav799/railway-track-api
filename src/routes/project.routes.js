@@ -7,6 +7,7 @@ const { verifyToken } = require("../middlewares/auth.middleware");
 router.get("/get-all-projects", verifyToken, controller.getAllProjects);
 router.post("/create-project", verifyToken, controller.createProject);
 router.get("/get-project/:projectId", verifyToken, controller.getProjectDetails);
+router.patch("/update-project/:projectId",  verifyToken,controller.updateProject);
 router.delete("/delete-project/:projectId", verifyToken, controller.deleteProject);
 
 
