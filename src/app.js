@@ -28,6 +28,52 @@ app.use("/api/assignproject",assignProjectRoutes)
 
 app.use("/api/layers",   layerRoutes);
 app.use("/api/projects", projectRoutes,);
+
+app.get("/", async (req, res) => {
+  try {
+
+    // Test database connection
+    await sequelize.authenticate();
+
+    res.status(200).json({
+      status: "success",
+      message: "Railway Track API is running 🚆",
+      database: "Connected ✅",
+      time: new Date()
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      status: "error",
+      message: "API running but database connection failed ❌",
+      error: error.message
+    });
+
+  }
+});
+app.get("/health", async (req, res) => {
+  try {
+
+    await sequelize.authenticate();
+
+    res.json({
+      api: "Running",
+      database: "Connected",
+      uptime: process.uptime()
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      api: "Running",
+      database: "Disconnected",
+      error: error.message
+    });
+
+  }
+});
+
 sequelize.sync()
   .then(() => console.log("Database synced"))
   .catch(err => console.error(err));

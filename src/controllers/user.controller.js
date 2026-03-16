@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const { User, Role, UserProject } = require("../models");
+const { User, Role, UserProject, Project } = require("../models");
 
 exports.createUser = async (req, res) => {
   try {
@@ -90,8 +90,8 @@ exports.getUserById = async (req, res) => {
         {
           model: Role,
           attributes: ["id", "name", "description"],
-          through: { attributes: [] } 
-        }
+          through: { attributes: [] }
+        },
       ]
     });
 
@@ -101,23 +101,9 @@ exports.getUserById = async (req, res) => {
       });
     }
 
-    // Get assigned projects
-    const userProjects = await UserProject.findAll({
-      where: {
-        user_id: id,
-        is_active: true
-      },
-      attributes: ["project_id"]
-    });
-
-    const projectIds = userProjects.map(p => p.project_id);
-
     res.status(200).json({
       success: true,
-      data: {
-        ...user.toJSON(),
-        projectIds: projectIds
-      }
+      data: user
     });
 
   } catch (error) {
@@ -126,6 +112,7 @@ exports.getUserById = async (req, res) => {
     });
   }
 };
+
 exports.deleteUser = async (req, res) => {
   try {
     const { id, deletedById } = req.params;
@@ -192,3 +179,5 @@ exports.restoreUser = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+

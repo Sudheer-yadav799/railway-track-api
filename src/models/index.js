@@ -103,9 +103,37 @@ Project.belongsToMany(User, {
   otherKey: "user_id",
   as: "users"
 });
+
+UserProject.belongsTo(Project, {
+  foreignKey: "project_id",
+  as: "project"
+});
+
+Project.hasMany(UserProject, {
+  foreignKey: "project_id"
+});
+
+
+UserProject.belongsTo(User, {
+  foreignKey: "user_id",
+  as: "user"
+});
+
+User.hasMany(UserProject, {
+  foreignKey: "user_id"
+});
+
 /* ======================
    EXPORT MODELS
 ====================== */
+
+UserSession.belongsTo(User, {
+  foreignKey: "user_id"
+});
+
+User.hasMany(UserSession, {
+  foreignKey: "user_id"
+});
 
 module.exports = {
   sequelize,
