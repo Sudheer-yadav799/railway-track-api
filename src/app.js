@@ -16,6 +16,31 @@ const app = express();
 
 app.use(cors());
 app.use(helmet());
+
+
+app.use(cors({
+   origin: [
+      "http://localhost:5173",
+      "http://115.245.208.219:5173"
+    ],
+  credentials: true
+}));
+
+app.options('*', cors());
+
+app.use(helmet({
+  crossOriginResourcePolicy: false
+}));
+
+
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src *; img-src * data:; connect-src *; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline';"
+  );
+  next();
+});
+
 app.use(morgan('dev'));
 app.use(express.json());
 
