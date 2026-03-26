@@ -1,12 +1,39 @@
 
-const { Project, ProjectLayer, LayerTemplate, LayerSection } = require("../models");
+const { Project, ProjectLayer, LayerTemplate, LayerSection,Layer } = require("../models");
+const { Sequelize } = require("sequelize");
 
 // ---------- GET /api/projects  → list all projects ----------
+// ---------- GET /api/projects ----------
 exports.getAllProjects = async (req, res) => {
   try {
     const projects = await Project.findAll({
       where: { is_active: true },
-      attributes: ["id", "name", "code", "from_station", "to_station", "geoserver_workspace", "track_length_km","station_count","map_view_center"],
+      attributes: [
+        "id",
+        "name",
+        "code",
+        "from_station",
+        "to_station",
+        "geoserver_workspace",
+        "track_length_km",
+        "station_count",
+        "map_view_center",
+
+        // ✅ COUNT layers per project
+        [
+          Sequelize.fn("COUNT", Sequelize.col("layers.id")),
+          "layer_count"
+        ]
+      ],
+      include: [
+        {
+          model: Layer,
+          as: "layers",
+          attributes: [],   // don't return full layer data
+          required: false   // include projects with 0 layers
+        }
+      ],
+      group: ["Project.id"],
       order: [["id", "ASC"]]
     });
 
@@ -19,7 +46,6 @@ exports.getAllProjects = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 
 // ---------- GET /api/projects/:projectId/layers  → project layers grouped by section ----------
 exports.getProjectLayers = async (req, res) => {

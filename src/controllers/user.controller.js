@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const { Sequelize } = require("sequelize");
 const { User, Role, UserProject, Project } = require("../models");
 
 exports.createUser = async (req, res) => {
@@ -16,7 +17,7 @@ exports.createUser = async (req, res) => {
           { mobile_number }
         ]
       },
-      paranoid: false   
+      paranoid: false
     });
 
     if (existingUser) {
@@ -71,9 +72,9 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+
 exports.getUserById = async (req, res) => {
   try {
-
     const { id } = req.params;
 
     const user = await User.findByPk(id, {
@@ -84,14 +85,23 @@ exports.getUserById = async (req, res) => {
         "mobile_number",
         "is_active",
         "created_by",
-        "deleted_by"
+        "deleted_by",
+        [
+          Sequelize.literal(`(
+    SELECT COUNT(*)
+    FROM user_projects up
+    WHERE up.user_id = "User"."id"
+    AND up.is_active = true
+  )`),
+          "project_count"
+        ]
       ],
       include: [
         {
           model: Role,
           attributes: ["id", "name", "description"],
           through: { attributes: [] }
-        },
+        }
       ]
     });
 
@@ -181,3 +191,80 @@ exports.restoreUser = async (req, res) => {
 };
 
 
+
+exports.updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      name,
+      email,
+      mobile_number,
+      password,
+      roleName
+    } = req.body;
+
+    // 🔍 check user exists
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    // 🔍 check duplicate email / mobile (exclude current user)
+    const existingUser = await User.findOne({
+      where: {
+        [require("sequelize").Op.or]: [
+          { email },
+          { mobile_number }
+        ],
+        id: { [require("sequelize").Op.ne]: id }
+      }
+    });
+
+    if (existingUser) {
+      if (existingUser.email === email) {
+        return res.status(400).json({
+          message: "Email already in use"
+        });
+      }
+
+      if (existingUser.mobile_number === mobile_number) {
+        return res.status(400).json({
+          message: "Mobile number already in use"
+        });
+      }
+    }
+
+    // ✅ update user (NO HASH)
+    await user.update({
+      name,
+      email,
+      mobile_number,
+      ...(password && { password }) // only update if provided
+    });
+
+    // 🔄 update role
+    if (roleName) {
+      const role = await Role.findOne({ where: { name: roleName } });
+
+      if (role) {
+        await user.setRoles([role]);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      data: user
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};

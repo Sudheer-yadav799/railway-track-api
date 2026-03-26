@@ -8,5 +8,6 @@ router.get("/get-id-by-userdetails/:id", verifyToken, userController.getUserById
 
 router.delete("/delete-by-id/:id/:deletedById", verifyToken, userController.deleteUser);
 router.post("/restore/:id/:restoredById",  verifyToken,userController.restoreUser); 
+router.post("/update-by-userid/:id",  verifyToken,userController.updateUser); 
 
 module.exports = router;

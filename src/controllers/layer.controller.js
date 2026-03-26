@@ -51,11 +51,15 @@ exports.getAllLayers = async (req, res) => {
             "opacity",
             "project_id",
             "section_id",
-            "project_id"
+            "project_id",
+            "created_at"
           ]
         }
       ],
-      order: [["id", "DESC"]]
+      order: [
+    ["id", "DESC"],
+     [{ model: Layer, as: "layers" }, "created_at", "ASC"] 
+  ]
     });
 
     const formattedData = sections.map(section => ({

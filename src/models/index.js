@@ -135,6 +135,16 @@ User.hasMany(UserSession, {
   foreignKey: "user_id"
 });
 
+
+Project.hasMany(Layer, {
+  foreignKey: "project_id",
+  as: "layers"
+});
+
+Layer.belongsTo(Project, {
+  foreignKey: "project_id",
+  as: "project"
+});
 module.exports = {
   sequelize,
   User,
