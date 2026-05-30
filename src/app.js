@@ -14,24 +14,30 @@ const projectRoutes = require("./routes/project.routes");
 const assignProjectRoutes = require("./routes/userproject.routes"); 
 const app = express();
 
-app.use(cors());
-app.use(helmet());
 
 
-app.use(cors({
-   origin: [
-      "http://localhost:5173",
-      "http://115.245.208.219:5173"
-    ],
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "http://115.245.208.221:5173"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
-}));
+};
 
-app.options('*', cors());
+// ✅ Use ONLY once
+app.use(cors(corsOptions));
 
-app.use(helmet({
-  crossOriginResourcePolicy: false
-}));
+// ✅ Handle preflight
+app.options("*", cors(corsOptions));
 
+// ✅ Helmet (safe config)
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
 
 app.use((req, res, next) => {
   res.setHeader(
