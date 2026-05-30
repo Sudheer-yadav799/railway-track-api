@@ -158,28 +158,75 @@ exports.register = async (req, res) => {
 };
 
 
-exports.getTodayUserSessions = async (req, res) => {
+exports.getUserSessions = async (req, res) => {
   try {
+    const { filter, startDate, endDate } = req.query;
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    let start;
+    let end = new Date();
 
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
+    // Custom date range
+    if (startDate && endDate) {
+      start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+
+      end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+    } else {
+      const today = new Date();
+
+      switch (filter) {
+        case "yesterday":
+          start = new Date(today);
+          start.setDate(today.getDate() - 1);
+          start.setHours(0, 0, 0, 0);
+
+          end = new Date(today);
+          end.setDate(today.getDate() - 1);
+          end.setHours(23, 59, 59, 999);
+          break;
+
+        case "lastWeek":
+          start = new Date(today);
+          start.setDate(today.getDate() - 7);
+          start.setHours(0, 0, 0, 0);
+
+          end = new Date();
+          end.setHours(23, 59, 59, 999);
+          break;
+
+        case "thisMonth":
+          start = new Date(today.getFullYear(), today.getMonth(), 1);
+          start.setHours(0, 0, 0, 0);
+
+          end = new Date();
+          end.setHours(23, 59, 59, 999);
+          break;
+
+        case "today":
+        default:
+          start = new Date();
+          start.setHours(0, 0, 0, 0);
+
+          end = new Date();
+          end.setHours(23, 59, 59, 999);
+          break;
+      }
+    }
 
     const sessions = await UserSession.findAll({
       where: {
         login_time: {
-          [Op.between]: [startOfDay, endOfDay]
-        }
+          [Op.between]: [start, end],
+        },
       },
       include: [
         {
           model: User,
-          attributes: ["id", "name", "email", "mobile_number"]
-        }
+          attributes: ["id", "name", "email", "mobile_number"],
+        },
       ],
-      order: [["login_time", "DESC"]]
+      order: [["login_time", "DESC"]],
     });
 
     const formatted = sessions.map((s) => ({
@@ -189,16 +236,21 @@ exports.getTodayUserSessions = async (req, res) => {
       mobile_number: s.User?.mobile_number,
       login_time: s.login_time,
       logout_time: s.logout_time,
-      status: s.is_active ? "active" : "logged_out"
+      status: s.is_active ? "active" : "logged_out",
     }));
 
-    res.json({
+    return res.json({
       success: true,
-      total_users_today: formatted.length,
-      users: formatted
+      filter: filter || (startDate && endDate ? "custom" : "today"),
+      startDate: start,
+      endDate: end,
+      total_users: formatted.length,
+      users: formatted,
     });
-
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    });
   }
 };

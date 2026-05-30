@@ -8,6 +8,6 @@ router.post('/login', controller.login);
 
 router.post('/logout', verifyToken, controller.logout);
 
-router.get( "/today-user-sessions",verifyToken,controller.getTodayUserSessions);
+router.get( "/user-sessions",verifyToken,controller.getUserSessions);
 
 module.exports = router;
