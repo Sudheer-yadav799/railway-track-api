@@ -54,6 +54,19 @@ exports.login = async (req, res) => {
       { expiresIn }
     );
 
+    await UserSession.update(
+      {
+        logout_time: new Date(),
+        is_active: false
+      },
+      {
+        where: {
+          user_id: user.id,
+          is_active: true
+        }
+      }
+    );
+
     await UserSession.create({
       user_id: user.id,
       token
@@ -111,25 +124,60 @@ exports.logout = async (req, res) => {
 exports.verifyToken = async (req, res, next) => {
   try {
     const authHeader = req.headers["authorization"];
-    if (!authHeader)
-      return res.status(403).json({ message: "Token required" });
+
+    if (!authHeader) {
+      return res.status(403).json({
+        message: "Token required"
+      });
+    }
 
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Verify JWT
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
 
+    // Find active session
     const session = await UserSession.findOne({
-      where: { token, is_active: true }
+      where: {
+        token,
+        is_active: true
+      }
     });
 
-    if (!session)
-      return res.status(401).json({ message: "Session expired or logged out" });
+    if (!session) {
+      return res.status(401).json({
+        message: "Session expired or logged out"
+      });
+    }
+
+    const loginTime = new Date(session.login_time);
+    const now = new Date();
+
+    const diffHours =
+      (now - loginTime) / (1000 * 60 * 60);
+
+    if (diffHours >= 8) {
+      await session.update({
+        logout_time: new Date(),
+        is_active: false
+      });
+
+      return res.status(401).json({
+        message:
+          "Session expired after 8 hours. Please login again."
+      });
+    }
 
     req.user = decoded;
     next();
 
   } catch (error) {
-    return res.status(401).json({ message: "Invalid token" });
+    return res.status(401).json({
+      message: "Invalid token"
+    });
   }
 };
 
