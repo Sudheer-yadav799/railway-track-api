@@ -66,19 +66,21 @@ exports.login = async (req, res) => {
         }
       }
     );
+ const decoded = jwt.decode(token);
 
-    await UserSession.create({
-      user_id: user.id,
-      token
-    });
-
-    const decoded = jwt.decode(token);
+await UserSession.create({
+  user_id: user.id,
+  token,
+  session_expiry_time: new Date(decoded.exp * 1000),
+  is_active: true
+});
+  
 
     res.json({
       message: "Login successful",
       token,
       userId: user.id,
-      expiresAt: new Date(decoded.exp * 1000)
+      expiresAt: new Date(decoded.exp*1000)
     });
 
   } catch (error) {
@@ -111,6 +113,7 @@ exports.logout = async (req, res) => {
 
     await session.update({
       logout_time: new Date(),
+      session_expiry_time: new Date(),
       is_active: false
     });
 
@@ -153,21 +156,19 @@ exports.verifyToken = async (req, res, next) => {
       });
     }
 
-    const loginTime = new Date(session.login_time);
     const now = new Date();
 
-    const diffHours =
-      (now - loginTime) / (1000 * 60 * 60);
-
-    if (diffHours >= 8) {
+    if (
+      session.session_expiry_time &&
+      now > session.session_expiry_time
+    ) {
       await session.update({
-        logout_time: new Date(),
+        logout_time: now,
         is_active: false
       });
 
       return res.status(401).json({
-        message:
-          "Session expired after 8 hours. Please login again."
+        message: "Session expired Please login again"
       });
     }
 
