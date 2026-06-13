@@ -64,7 +64,9 @@ const Project = sequelize.define("Project", {
   tableName: "projects",
   freezeTableName: true,
   underscored: true,
-  timestamps: true
+  timestamps: true,
+  paranoid: true,
+  deletedAt: "deleted_at"
 });
 
 module.exports = Project;

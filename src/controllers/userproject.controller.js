@@ -188,10 +188,10 @@ exports.getUsersWithProjects = async (req, res) => {
         {
           model: Project,
           as: "projects",
-          attributes: ["id", "name", "code"],
+          attributes: ["id", "name", "code","deleted_at"],
           through: {
             attributes: [],
-            where: { is_active: true }
+            where: { is_active: true,},
           }
         },
         {
@@ -207,10 +207,12 @@ exports.getUsersWithProjects = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.Roles?.[0]?.name || null,
+       
       projects: user.projects.map(p => ({
         id: p.id,
         name: p.name,
-        code: p.code
+        code: p.code,
+        deleted_at :p.deleted_at
       }))
     }));
 

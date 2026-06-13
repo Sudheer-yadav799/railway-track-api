@@ -19,8 +19,8 @@ exports.getAllLayers = async (req, res) => {
       layerWhere = {
         isactivated: true,
         [Op.or]: [
-          { project_id: { [Op.in]: projectIds } },  
-          { section_id: 3, project_id: null }        
+          { project_id: { [Op.in]: projectIds } },
+          { section_id: 3, project_id: null }
         ]
       };
     }
@@ -39,6 +39,7 @@ exports.getAllLayers = async (req, res) => {
             "color",
             "fillcolor",
             "isenabled",
+            "isactivated", // add this
             "type",
             "apiendpoint",
             "sortby",
@@ -51,15 +52,14 @@ exports.getAllLayers = async (req, res) => {
             "opacity",
             "project_id",
             "section_id",
-            "project_id",
             "created_at"
           ]
         }
       ],
       order: [
-    ["id", "DESC"],
-     [{ model: Layer, as: "layers" }, "created_at", "ASC"] 
-  ]
+        ["id", "DESC"],
+        [{ model: Layer, as: "layers" }, "created_at", "ASC"]
+      ]
     });
 
     const formattedData = sections.map(section => ({
@@ -69,7 +69,7 @@ exports.getAllLayers = async (req, res) => {
         .sort((a, b) => (a.sortby || 0) - (b.sortby || 0))
         .map(layer => ({
           id: layer.id,
-          layerCode :layer.layer_code,
+          layerCode: layer.layer_code,
           name: layer.name,
           color: layer.color,
           fillcolor: layer.fillcolor,
@@ -84,7 +84,7 @@ exports.getAllLayers = async (req, res) => {
           iconUrl: layer.icon_url,
           geoserverWorkSpace: layer.geoserver_workspace,
           opacity: layer.opacity,
-          project_id :layer.project_id
+          project_id: layer.project_id
         }))
     }));
 
