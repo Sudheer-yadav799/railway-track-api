@@ -15,6 +15,8 @@ const assignProjectRoutes = require("./routes/userproject.routes");
 const app = express();
 
 
+require("./cron/sessionCleanup");
+
 
 const corsOptions = {
   origin: [
