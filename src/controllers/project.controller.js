@@ -213,7 +213,7 @@ exports.getProjectDetails = async (req, res) => {
 
 exports.deleteProject = async (req, res) => {
   try {
-
+    
     const { projectId } = req.params;
 
     const project = await Project.findByPk(projectId);
@@ -226,18 +226,22 @@ exports.deleteProject = async (req, res) => {
     }
 
     await project.update({
-      deleted_at: new Date(),
       deleted_by: req.user.id,
       is_active: false
     });
 
-    res.status(200).json({
+    await project.destroy(); // sets deleted_at automatically
+
+    return res.status(200).json({
       success: true,
       message: "Project deleted successfully"
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
 };
 
